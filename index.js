@@ -8,11 +8,11 @@ const TYPES = [
 
 const TYPE_CHART = {
   Normal: { Acier:0.5, Roche:0.5, Spectre:0 },
-  Plante: { Eau:2, Roche:2, Sol:2, Acier:0.5, Dragon:0.5, Feu:0.5, Insecte:0.5, Plante:0.5, Poison,0.5, Vol:0.5 },
+  Plante: { Eau:2, Roche:2, Sol:2, Acier:0.5, Dragon:0.5, Feu:0.5, Insecte:0.5, Plante:0.5, Poison:0.5, Vol:0.5 },
   Feu: { Acier:2, Glace:2, Insecte:2, Plante:2, Dragon:0.5, Eau:0.5, Feu:0.5, Roche:0.5 }, 
   Eau: { Feu:2, Roche:2, Sol:2, Dragon:0.5, Eau:0.5, Plante:0.5 },
   Électrik: { Eau:2, Vol:2, Dragon:0.5, Électrik:0.5, Plante:0.5, Sol:0 },
-  Glace: { Dragon:2, Plante:2, Sol:2, Vol:2, Eau:0.5, Glace:0.5 },
+  Glace: { Dragon:2, Plante:2, Sol:2, Vol:2, Acier:0.5, Eau:0.5, Feu:0.5, Glace:0.5},
   Combat: { Acier:2, Glace:2, Normal:2, Roche:2, Ténèbres:2, Insecte:0.5, Poison:0.5, Psy:0.5, Vol:0.5, Spectre:0 }, 
   Poison: { Plante:2, Poison:0.5, Roche:0.5, Sol:0.5, Spectre:0.5, Acier:0 },
   Sol: { Acier:2, Électrik:2, Feu:2, Poison:2, Roche:2, Insecte:0.5, Plante:0.5, Vol:0 },
