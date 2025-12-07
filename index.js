@@ -1,8 +1,5 @@
-// Assure-toi que <script src="index.js" defer></script> ou que le script est chargé après le HTML.
-
-// ---------- Données ----------
 const TYPES = [
-  'Normal','Feu','Plante','Eau','Électrik','Glace','Combat','Poison','Sol','Vol',
+  'Normal','Plante','Feu','Eau','Électrik','Glace','Combat','Poison','Sol','Vol',
   'Psy','Insecte','Roche','Spectre','Dragon','Ténèbres','Acier','Fée'
 ];
 
@@ -27,7 +24,6 @@ const TYPE_CHART = {
   Fée: {  }
 };
 
-// ---------- Utilitaires ----------
 function getMultiplier(attacker, defender){
   const m = TYPE_CHART[attacker];
   if(!m) return 1;
@@ -35,12 +31,10 @@ function getMultiplier(attacker, defender){
 }
 
 function animateIn(el, opts = {}) {
-  // simple fade + slide animation controlled in JS so you don't need to modify CSS
   const { fromY = 12, fromX = 0, delay = 10, duration = 300 } = opts;
   el.style.opacity = '0';
   el.style.transform = `translate(${fromX}px, ${fromY}px)`;
   el.style.transition = `opacity ${duration}ms ease, transform ${duration}ms ease`;
-  // small delay to ensure transition triggers
   requestAnimationFrame(() => {
     setTimeout(() => {
       el.style.opacity = '1';
@@ -49,14 +43,12 @@ function animateIn(el, opts = {}) {
   });
 }
 
-// pulse animation for button feedback
 function pulseButton(btn){
   btn.style.transition = 'transform 140ms ease';
   btn.style.transform = 'scale(1.05)';
   setTimeout(() => btn.style.transform = 'scale(1)', 140);
 }
 
-// ---------- DOM helpers ----------
 function clearAndFocus(container){
   container.innerHTML = '';
   container.scrollTop = 0;
@@ -69,7 +61,6 @@ function make(titleText){
   return el;
 }
 
-// ---------- Création de la grille ----------
 function createTypeGrid(container, onClick, small=false){
   const grid = document.createElement('div');
   grid.className = 'type-grid';
@@ -85,14 +76,12 @@ function createTypeGrid(container, onClick, small=false){
       onClick(t);
     });
     grid.appendChild(cell);
-    // anime chaque cellule avec un léger décalage
     animateIn(cell, { fromY: 8, delay: 15 * (TYPES.indexOf(t) % 6) });
   });
   container.appendChild(grid);
   animateIn(grid, { fromY: 10, delay: 0 });
 }
 
-// ---------- Affichage des résultats ----------
 function showResults(parent, lists, modeLabel){
   clearAndFocus(parent);
   const wrapper = document.createElement('div');
@@ -116,8 +105,8 @@ function showResults(parent, lists, modeLabel){
   }
 
   const p1 = makePanel('Super Efficace (x2 ou x4)', lists.forces);
-  const p2 = makePanel('Peu Efficace/Immunisé (x0, x0.25, x0.5)', lists.weaknesses);
-  const p3 = makePanel('Neutre (x1)', lists.neutral);
+  const p2 = makePanel('Peu Efficace (x0.25, x0.5)', lists.weaknesses);
+  const p3 = makePanel('Immunisé (x0)', lists.neutral);
 
   wrapper.appendChild(p1);
   wrapper.appendChild(p2);
@@ -125,58 +114,47 @@ function showResults(parent, lists, modeLabel){
 
   parent.appendChild(wrapper);
 
-  // anime les panneaux avec un léger décalage
   [p1,p2,p3].forEach((p, i) => {
     setTimeout(() => animateIn(p, { fromX: 14, duration: 360 }), i * 90);
   });
 }
 
-// ---------- Modes ----------
+
 function attackMode(root){
-  clearAndFocus(root);
-  root.appendChild(make('Mode Attaque — Choisissez un Type Attaquant'));
-  createTypeGrid(root, (type) => {
-    // calcule pour chaque défense
-    const forces = [], weaknesses = [], neutral = [];
-    TYPES.forEach(def => {
-      const m = getMultiplier(type, def);
-      if(m === 2) forces.push({type:def, mult:'x2'});
-      else if(m === 0.5) weaknesses.push({type:def, mult:'x0.5'});
-      else if(m === 0) weaknesses.push({type:def, mult:'x0'});
-      else neutral.push({type:def, mult:'x1'});
-    });
-    showResults(root, {forces, weaknesses, neutral}, 'attaque');
-  });
+  clearAndFocus(root);
+  root.appendChild(make('Mode Attaque — Choisissez un Type Attaquant'));
+  createTypeGrid(root, (type) => {
+    const forces = [], weaknesses = [], neutral = [];
+    TYPES.forEach(def => {
+      const m = getMultiplier(type, def);
+      if(m === 2) forces.push({type:def, mult:'x2'});
+      else if(m === 0.5) weaknesses.push({type:def, mult:'x0.5'});
+      else if(m === 0) neutral.push({type:def, mult:'x0'}); 
+    });
+    showResults(root, {forces, weaknesses, neutral}, 'attaque');
+  });
 }
 
 function defenseSingleMode(root){
-  clearAndFocus(root);
-  root.appendChild(make('Mode Défense (1 type) — Choisissez un Type Défenseur'));
-  createTypeGrid(root, (type) => {
-    // forces stockera les "faiblesses de défense" (Super Efficace: x2) 
-    // weaknesses stockera les "résistances de défense" (Peu Efficace/Immunisé: x0, x0.5)
-    const forces = [], weaknesses = [], neutral = []; 
-    TYPES.forEach(att => {
-      const m = getMultiplier(att, type);
-      
-      // ECHANGE: si l'attaque est SUPER EFFICACE (x2) pour la défense -> Va dans la case "Super Efficace (x2 ou x4)"
-      if(m === 2) forces.push({type:att, mult:'x2'}); 
-      
-      // ECHANGE: si l'attaque est PEU EFFICACE/IMMUNISÉE (x0, x0.5) pour la défense -> Va dans la case "Peu Efficace/Immunisé (x0, x0.25, x0.5)"
-      else if(m === 0 || m === 0.5) weaknesses.push({type:att, mult: m===0 ? 'x0' : 'x0.5'}); 
-      
-      else neutral.push({type:att, mult:'x1'});
-    });
-    // showResults affiche forces dans le 1er panneau et weaknesses dans le 2ème. Les listes ont été ajustées ci-dessus.
-    showResults(root, {forces, weaknesses, neutral}, 'defense-single');
-  });
+  clearAndFocus(root);
+  root.appendChild(make('Mode Défense (1 type) — Choisissez un Type Défenseur'));
+  createTypeGrid(root, (type) => {
+    const forces = [], weaknesses = [], neutral = []; 
+    TYPES.forEach(att => {
+      const m = getMultiplier(att, type);
+      if(m === 2) forces.push({type:att, mult:'x2'}); 
+      else if(m === 0.5) weaknesses.push({type:att, mult:'x0.5'}); 
+      else if(m === 0) neutral.push({type:att, mult:'x0'}); 
+      
+    });
+    showResults(root, {forces, weaknesses, neutral}, 'defense-single');
+  });
 }
 
 function defenseDoubleMode(root){
   clearAndFocus(root);
   root.appendChild(make('Mode Défense (2 types) — Choisissez le premier type'));
   createTypeGrid(root, (first) => {
-    // show second selection
     clearAndFocus(root);
     const info = document.createElement('div'); 
     info.className='center';
@@ -190,36 +168,27 @@ function defenseDoubleMode(root){
         const m2 = getMultiplier(att, second);
         const mult = +(m1 * m2); 
 
-        if(mult === 2 || mult === 4){
-          let label = mult === 4 ? 'x4' : 'x2';
-          forces.push({type:att, mult:label}); 
-        } else if(mult === 0 || mult === 0.5 || mult === 0.25){
-          let label = 'x' + mult;
-          if(mult === 0.5) label = 'x0.5';
-          if(mult === 0.25) label = 'x0.25';
-          if(mult === 0) label = 'x0';
-          weaknesses.push({type:att, mult:label}); 
-        } else {
-          neutral.push({type:att, mult:'x1'});
+        if(mult === 4 || mult === 2) {
+          forces.push({type:att, mult: mult === 4 ? 'x4' : 'x2'});
+        } else if(mult === 0.5 || mult === 0.25) {
+          weaknesses.push({type:att, mult: mult === 0.5 ? 'x0.5' : 'x0.25'});
+        } else if(mult === 0) {
+          neutral.push({type:att, mult:'x0'}); 
         }
       });
       showResults(root, {forces, weaknesses, neutral}, 'defense-double');
     });
 
-    // --- appliquer la classe CSS pour le premier type choisi ---
     const gridCells = document.querySelectorAll('.type-grid .type-cell');
     gridCells.forEach(cell => {
       if(cell.dataset.type === first){
-        cell.classList.add('type-selected'); // applique le style blanc/noir et non-cliquable
-        cell.removeEventListener('click', cell.onclick); // désactive le clic
+        cell.classList.add('type-selected');
+        cell.removeEventListener('click', cell.onclick);
       }
     });
   });
 }
 
-
-
-// ---------- Initial wiring ----------
 window.addEventListener('DOMContentLoaded', () => {
   const attackBtn = document.getElementById('attack-btn');
   const defenseBtn = document.getElementById('defense-btn');
@@ -233,7 +202,6 @@ window.addEventListener('DOMContentLoaded', () => {
   attackBtn.addEventListener('click', (e) => { pulseButton(attackBtn); attackMode(app); });
   defenseBtn.addEventListener('click', (e) => {
     pulseButton(defenseBtn);
-    // show defense choice
     app.innerHTML = '';
     const c = document.createElement('div'); c.className='center';
     c.innerHTML = '<h2>Mode Défense — Choisissez 1 ou 2 types</h2>';
@@ -250,7 +218,6 @@ window.addEventListener('DOMContentLoaded', () => {
     animateIn(controls, { fromY: 8 });
   });
 
-  // auto-open attaque par défaut
   attackMode(app);
 });
 function addBackButton() {
@@ -270,8 +237,8 @@ function addBackButton() {
 
     btn.addEventListener("click", () => {
         const app = document.getElementById('app');
-        app.innerHTML = ''; // vide tout
-        attackMode(app);     // recharge le mode attaque par défaut
+        app.innerHTML = ''; 
+        attackMode(app);     
     });
 
     document.querySelector("main.container").appendChild(btn);
